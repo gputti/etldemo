@@ -1,0 +1,51 @@
+SERVER SCRIPTS
+cd /Users/gopi/dev/ss/cm
+sh bld.sh
+sh server.sh start
+sh server.sh stop 
+
+
+DB SETUP
+CREATE EXTENSION "uuid-ossp";
+
+-- shiva.contact definition
+
+-- Drop table
+
+-- DROP TABLE shiva.contact;
+
+CREATE TABLE shiva.contact (
+	id int8 NOT NULL,
+	created_at timestamp NULL,
+	email varchar(512) NULL,
+	firstname varchar(256) NULL,
+	lastname varchar(256) NULL,
+	location text NULL,
+	logo bytea NULL,
+	notes text NULL,
+	code uuid NOT NULL DEFAULT shiva.uuid_generate_v4(),
+	CONSTRAINT contact_pkey PRIMARY KEY (id)
+);
+
+
+
+
+POST http://localhost:8080/rest/api/v1/contact
+{
+	"firstname" : "gopi1",
+	"lastname" : "putti1",
+	"email" : "gopi@gmail.com",
+    "localhost" : "https://goo.gl/maps/S7A5VWNFkSfx45MM9"
+}
+
+
+
+problems and solutions:
+when UUID is included in Entity delcaration, failed to create table by JPA. 
+create table manually and move on. Use 'logging.level.org.hibernate.SQL=DEBUG'
+to get SQL generated and try manully. 
+
+
+
+
+
