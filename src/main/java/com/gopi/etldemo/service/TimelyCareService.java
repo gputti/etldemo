@@ -15,11 +15,11 @@
  * fitness for particular purposes and noninfringement of third party rights.
  * 
  **/
-package com.gopi.etldemo.model;
+package com.gopi.etldemo.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.stereotype.Service;
 
-import org.junit.jupiter.api.Test;
+import com.gopi.etldemo.model.TimelyCare;
 
 /**
  * @author Gopikrishna Putti
@@ -27,11 +27,8 @@ import org.junit.jupiter.api.Test;
  *
  */
 
-class ExtractConfigTest {
+@Service
+public interface TimelyCareService {
 
-	@Test
-	void test() {
-		fail("Not yet implemented");
-	}
-
+	TimelyCare save(TimelyCare tc);
 }

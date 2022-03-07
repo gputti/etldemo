@@ -38,7 +38,7 @@ public class HospitalServiceImpl implements HospitalService {
 	HospitalRepository hospitalRepo;
 	
 	@Override
-	public Hospital saveHospital(Hospital ho) {
+	public Hospital save(Hospital ho) {
 		ho = hospitalRepo.save(ho);
 		return ho;
 	}

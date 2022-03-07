@@ -15,47 +15,20 @@
  * fitness for particular purposes and noninfringement of third party rights.
  * 
  **/
-package com.gopi.etldemo.service;
+package com.gopi.etldemo.repositories;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.gopi.etldemo.model.TimelyCare;
 
 /**
  * @author Gopikrishna Putti
- * Mar 5, 2022
- * 
- * loads data from raw data files
+ * Mar 6, 2022
+ *
  */
 
-public class LoadingService {
-	
-	private static final Logger logger = LoggerFactory.getLogger(LoadingService.class);
-	
-	// returns file contents as string.
-	public static String getFileContentsFromtPath(String path) {
-
-		StringBuilder sb = new StringBuilder( );
-		try {			
-			File file = new File(path);
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String line = null;			
-			while ((line = br.readLine()) != null) {
-				sb.append(line).append("\r\n");
-			}
-			br.close();
-
-		} catch (IOException e) {
-			logger.error("Error reading peoplename.txt " +e.getMessage());
-		}
-		return sb.toString();
-
-	}
-	
-	
+@Repository
+public interface TimelyCareRepository extends JpaRepository<TimelyCare, Long> {
 
 }
