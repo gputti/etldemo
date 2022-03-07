@@ -28,7 +28,7 @@ import com.gopi.etldemo.model.Hospital;
  */
 
 @Service
-public interface DemoService {
+public interface HospitalService {
 	
 	
 	Hospital saveHospital(Hospital ho);

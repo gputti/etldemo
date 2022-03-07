@@ -17,8 +17,6 @@
  **/
 package com.gopi.etldemo.controller;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,6 +30,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +48,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gopi.etldemo.model.DbConfig;
 import com.gopi.etldemo.model.ExtractConfig;
 import com.gopi.etldemo.model.Hospital;
-import com.gopi.etldemo.service.DemoService;
-
+import com.gopi.etldemo.service.HospitalService;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,15 +68,15 @@ public class DemoController {
 
 	private static final Logger logger = LoggerFactory.getLogger(DemoController.class);
 	static ObjectMapper mapper = new ObjectMapper();
-	
+
 	static {
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL,true);
+		mapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL,true);
 	}
-	
+
 	@Autowired
-	private DemoService demoService; 
-	
+	private HospitalService hospitalService; 
+
 	private String getTime() {
 		return new java.text.SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(System.currentTimeMillis()) ; 
 	}
@@ -92,102 +92,136 @@ public class DemoController {
 	}       
 
 	@PostMapping("/extract")
+	@Transactional
 	public ResponseEntity<String> readData(@RequestBody String json, HttpServletResponse response) {
 		logger.info("read hospital data: {}", getTime() );
 		logger.info("json received: {}", json );
 		ExtractConfig obj = extractInputDetails(json);
+
+		List<Hospital> result = new ArrayList<Hospital>();
 		
 		if ( obj.getTable().equalsIgnoreCase("hospital")) {
 			List<Hospital> list = getHospitalObjects(obj);
 			
+			for(Hospital h : list) {
+				result.add(hospitalService.saveHospital(h));
+			}
+			
+
 			// persist all objects.
-			
-			
+
+
 			// store the failed records to a particular place 
-			
-			
+
+
 			// prepare return message & send,
 		} else if (obj.getTable().equalsIgnoreCase("timelycare_score") ) {
-			
+
 			List<Hospital> list = getTimelycareScoreObjects(obj);
-			
+
 			// persist all objects.
-			
-			
+
+
 			// store the failed records to a particular place 
-			
-			
+
+
 			// prepare return message & send,
-			
-			
-			
+
+
+
 		}
 
-		return new ResponseEntity<String>( "svaed successfully. " + obj , HttpStatus.OK);
+		return new ResponseEntity<String>( "svaed successfully. result.size() " + result.size() , HttpStatus.OK);
 
 	}
-	
-	
+
+
 	private List<Hospital> getTimelycareScoreObjects(ExtractConfig obj) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	
-	
+
+
 	private List<Hospital> getHospitalObjects(ExtractConfig obj) {
-		
-		
+
+
 		List<Hospital> output = new ArrayList<Hospital>( );
 		List<String> erroroutput = new ArrayList<String>( );
 
 		// read config
 		List<String> colnames = new ArrayList<String>( );
 		Map<String, DbConfig> configmap = new LinkedHashMap<String, DbConfig>( );		
-		Path path2 = Paths.get(obj.getConfig());
+		Path path2 = Paths.get(obj.getConfig());		
 		try(  Stream<String> lines = Files.lines(path2)) {
-			
+
 			lines.forEach(x ->  { 
-				DbConfig dc = buildConfigObj(x);
-				colnames.add(dc.name);
-				configmap.put(dc.name, dc);
+				if ( x != null && !x.trim().isEmpty()) {
+					DbConfig dc = buildConfigObj(x);
+					colnames.add(dc.name);
+					configmap.put(dc.name, dc);					
+				}
+
 			});			
 		} catch (IOException e) {
 			logger.error("Error reading peoplename.txt " +e.getMessage());
 		}
 
-		
+
+
+
 		// read data
 		List<String> data = new ArrayList<String>( );		
 		Path path = Paths.get(obj.getDataloc());
 		Map<String, Integer> cntr = new HashMap<String, Integer>();
 		cntr.put("counter", 0);
-		
-		try(  Stream<String> lines = Files.lines(path)) {
-			lines.forEach(dataline -> {
-				cntr.put("counter", cntr.get("counter") + 1  );
-				data.add(dataline);
-				Object o1 = buildObjectFromRawData(colnames, configmap,  dataline);
+
+		try (CSVReader reader = new CSVReader(new FileReader(obj.getDataloc()))) {
+			String[] lineInArray;
+			while ((lineInArray = reader.readNext()) != null) {
+				cntr.put("counter", cntr.get("counter") + 1  );				 
+				System.out.println(">>>> arrays: " + lineInArray.length );
+				Object o1 = buildObjectFromRawData(colnames, configmap,  lineInArray);
 				if ( o1 instanceof Hospital) {
 					output.add((Hospital)o1);
 				} else {
 					erroroutput.add((String)o1);						
 				}
-			});
-			
-		} catch (IOException e) {
-			logger.error("Error reading peoplename.txt " +e.getMessage());
+			}
+
+		} catch (IOException | CsvValidationException ex) {
+			logger.error("Error reading peoplename.txt " +ex.getMessage());
 		}
-		
-		
+
+
+		// no CSV reader
+		//		try(  Stream<String> lines = Files.lines(path)) {
+		//			lines.forEach(dataline -> {
+		//				cntr.put("counter", cntr.get("counter") + 1  );
+		//				data.add(dataline);
+		//				Object o1 = buildObjectFromRawData(colnames, configmap,  dataline);
+		//				if ( o1 instanceof Hospital) {
+		//					output.add((Hospital)o1);
+		//				} else {
+		//					erroroutput.add((String)o1);						
+		//				}
+		//			});
+		//			
+		//		} catch (IOException e) {
+		//			logger.error("Error reading peoplename.txt " +e.getMessage());
+		//		}
+
+
 		// go thru each data row and build object.
-		
+
 
 		return output;
 	}
-	
-	private Object buildObjectFromRawData(List<String> colnames, Map<String, DbConfig> configmap, String dataline) {
-		String [] parts = dataline.split(",");
+
+	private Object buildObjectFromRawData(List<String> colnames, Map<String, DbConfig> configmap, String[] lineInArray) {
+		String dataline = null;
+		//		String [] parts = dataline.split(",");
+		String [] parts = lineInArray;
 		String err = "";
 		if ( parts.length != colnames.size() ) {
 			err = "Data exception: no of values mismatch. expected: " +  colnames.size() + ", actual: " + parts.length; 
@@ -203,8 +237,8 @@ public class DemoController {
 			String colname = colnames.get(ik);
 			String type = configmap.get(colname).type;
 
-			
-			
+
+
 			if( type.equals("SMALLINT") || type.equals("INTEGER") ) {
 				if( colval == null || colval.isEmpty() ) {
 					colval = null;
@@ -219,22 +253,19 @@ public class DemoController {
 					}
 				}
 			} else if ( type.trim().toUpperCase().startsWith("VARCHAR")) {
-				if( colval == null || colval.isEmpty() ) {
-					colval = null;
-				} else {
-
-				}
-				
+				String len = type.substring(type.indexOf("(") + 1, type.indexOf(")"));
+//				logger.debug("len : {} " , len);
 			}
-			
 			if ( failed )
 				return err;
 
-			
+			// data is clean and we can build object now			
+			valmap.put(colname, colval);			
 		}
-		
-		return null;
-				
+		Hospital h1 = mapper.convertValue(valmap, Hospital.class);
+
+		return h1;
+
 	}
 
 
@@ -242,7 +273,7 @@ public class DemoController {
 
 		String parts[] = x.split("\\|");
 		logger.trace(">> x {}", x);
-		DbConfig config = new DbConfig(parts[0], parts[1]);
+		DbConfig config = new DbConfig(parts[0].trim(), parts[1].trim());
 		return config;
 	}
 
@@ -259,19 +290,19 @@ public class DemoController {
 		}
 		return obj;
 	}
-	
+
 	public static void main(String[] args) {
-		
+
 		ExtractConfig config = new ExtractConfig( );
 		config.configfile_location = "/Users/gopi/Downloads/hospital.config";
 		config.data_location = "/Users/gopi/Downloads/Hospital_General_Information.csv";
 		config.table_name = "hostpital";
-		
+
 		String json = "{\"table_name\" : \"hospital\",\"data_location\" : \"/Users/gopi/Downloads/Hospital_General_Information.csv\",\"configfile_location\" : \"/Users/gopi/Downloads/hospital.config\"}";
-		
+
 		DemoController controller = new DemoController( );
 		controller.readData(json, null);
-		
+
 	}
 
 

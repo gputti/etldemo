@@ -15,20 +15,23 @@
  * fitness for particular purposes and noninfringement of third party rights.
  * 
  **/
-package com.gopi.etldemo.repositories;
+package com.gopi.etldemo.model;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import static org.junit.jupiter.api.Assertions.*;
 
-import com.gopi.etldemo.model.Hospital;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gopikrishna Putti
- * Mar 5, 2022
+ * Mar 6, 2022
  *
  */
 
-@Repository
-public interface DemoRepository extends JpaRepository<Hospital, Long> {
+class ExtractConfigTest {
+
+	@Test
+	void test() {
+		fail("Not yet implemented");
+	}
 
 }

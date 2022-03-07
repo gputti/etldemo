@@ -15,32 +15,20 @@
  * fitness for particular purposes and noninfringement of third party rights.
  * 
  **/
-package com.gopi.etldemo.service.impl;
+package com.gopi.etldemo.repositories;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.gopi.etldemo.model.Hospital;
-import com.gopi.etldemo.repositories.DemoRepository;
-import com.gopi.etldemo.service.DemoService;
 
 /**
  * @author Gopikrishna Putti
- * Mar 5, 2022
+ * Mar 6, 2022
  *
  */
 
-@Service
-public class DemoServiceImpl implements DemoService {
-
-	
-	@Autowired
-	DemoRepository demoRepo;
-	
-	@Override
-	public Hospital saveHospital(Hospital ho) {
-		ho = demoRepo.save(ho);
-		return ho;
-	}
+@Repository
+public interface HospitalRepository extends JpaRepository<Hospital, Long> {
 
 }

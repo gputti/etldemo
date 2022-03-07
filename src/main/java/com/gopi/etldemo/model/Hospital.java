@@ -40,48 +40,48 @@ import lombok.Data;
 public class Hospital implements Serializable {
 	
 
-	private static final long serialVersionUID = 2561327726202126090L;
+	public static final long serialVersionUID = 2561327726202126090L;
 	
 	
 	@Id
-	private Long Facility_ID  ;
-	private String Facility_Name ;  
-	private String Address ; 
-	private String City  ;
-	private String State ;
-	private String ZIP_Code ;
-	private String County_Name  ;
-	private String Phone_Number ;
-	private String Hospital_Type  ;
-	private String Hospital_Ownership  ;
-	private String Emergency_Services ;
-	private String Meets_criteria_for_promoting_interoperability_of_EHRs ;  
-	private int Hospital_overall_rating  ;
-	private int Hospital_overall_rating_footnote ; 
-	private int MORT_Group_Measure_Count  ;
-	private int Count_of_Facility_MORT_Measures ;
-	private int Count_of_MORT_Measures_Better  ;
-	private int Count_of_MORT_Measures_No_Different ; 
-	private int Count_of_MORT_Measures_Worse ; 
-	private int MORT_Group_Footnote ;
-	private int Safety_Group_Measure_Count ;
-	private int Count_of_Facility_Safety_Measures ;
-	private int Count_of_Safety_Measures_Better  ;
-	private int Count_of_Safety_Measures_No_Different ; 
-	private int Count_of_Safety_Measures_Worse ; 
-	private int Safety_Group_Footnote ;
-	private int READM_Group_Measure_Count  ;
-	private int Count_of_Facility_READM_Measures ;
-	private int Count_of_READM_Measures_Better ;
-	private int Count_of_READM_Measures_No_Different ; 
-	private int Count_of_READM_Measures_Worse ; 
-	private int READM_Group_Footnote ;
-	private int Pt_Exp_Group_Measure_Count ;
-	private int Count_of_Facility_Pt_Exp_Measures ; 
-	private int Pt_Exp_Group_Footnote  ;
-	private int TE_Group_Measure_Count  ;
-	private int Count_of_Facility_TE_Measures; 
-	private int TE_Group_Footnote ;
+	public Long Facility_ID  ;
+	public String Facility_Name ;  
+	public String Address ; 
+	public String City  ;
+	public String State ;
+	public String ZIP_Code ;
+	public String County_Name  ;
+	public String Phone_Number ;
+	public String Hospital_Type  ;
+	public String Hospital_Ownership  ;
+	public String Emergency_Services ;
+	public String Meets_criteria_for_promoting_interoperability_of_EHRs ;  
+	public Integer Hospital_overall_rating  ;
+	public Integer Hospital_overall_rating_footnote ; 
+	public Integer MORT_Group_Measure_Count  ;
+	public Integer Count_of_Facility_MORT_Measures ;
+	public Integer Count_of_MORT_Measures_Better  ;
+	public Integer Count_of_MORT_Measures_No_Different ; 
+	public Integer Count_of_MORT_Measures_Worse ; 
+	public Integer MORT_Group_Footnote ;
+	public Integer Safety_Group_Measure_Count ;
+	public Integer Count_of_Facility_Safety_Measures ;
+	public Integer Count_of_Safety_Measures_Better  ;
+	public Integer Count_of_Safety_Measures_No_Different ; 
+	public Integer Count_of_Safety_Measures_Worse ; 
+	public Integer Safety_Group_Footnote ;
+	public Integer READM_Group_Measure_Count  ;
+	public Integer Count_of_Facility_READM_Measures ;
+	public Integer Count_of_READM_Measures_Better ;
+	public Integer Count_of_READM_Measures_No_Different ; 
+	public Integer Count_of_READM_Measures_Worse ; 
+	public Integer READM_Group_Footnote ;
+	public Integer Pt_Exp_Group_Measure_Count ;
+	public Integer Count_of_Facility_Pt_Exp_Measures ; 
+	public Integer Pt_Exp_Group_Footnote  ;
+	public Integer TE_Group_Measure_Count  ;
+	public Integer Count_of_Facility_TE_Measures; 
+	public Integer TE_Group_Footnote ;
 	
 
 	
