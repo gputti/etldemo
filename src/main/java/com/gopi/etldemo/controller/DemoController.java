@@ -99,7 +99,7 @@ public class DemoController {
 
 	@PostMapping("/etl")
 	@Transactional
-	public ResponseEntity<String> readAndLoadData(@RequestBody String json, HttpServletResponse response) {
+	public ResponseEntity<String> readAndLoadData(@RequestBody String json, HttpServletResponse response)  {
 
 		logger.info("json received: {}", json );
 		ExtractConfig obj = extractInputDetails(json);
@@ -107,29 +107,33 @@ public class DemoController {
 			return new ResponseEntity<String>( "wrong input. " , HttpStatus.BAD_REQUEST);
 		}
 
-		List<Object> result = new ArrayList<Object>();
-		
-		if ( obj.getTable().equalsIgnoreCase("hospital")) {
-			List<Hospital> list = buildEntityObjects(obj);
-			for(Hospital h : list) {
-				result.add(hospitalService.save(h));
+		try {
+			List<Object> result = new ArrayList<Object>();		
+			if ( obj.getTable().equalsIgnoreCase("hospital")) {
+				List<Hospital> list = buildEntityObjects(obj);
+				for(Hospital h : list) {
+					result.add(hospitalService.save(h));
+				}
+
+			} else if (obj.getTable().equalsIgnoreCase("timelycare") ) {
+
+				List<TimelyCare> list = buildEntityObjects(obj);
+				
+				for(TimelyCare tc : list) {
+					result.add(timelyCareService.save(tc));
+				}
+
 			}
 
-		} else if (obj.getTable().equalsIgnoreCase("timelycare") ) {
-
-			List<TimelyCare> list = buildEntityObjects(obj);
-			
-			for(TimelyCare tc : list) {
-				result.add(timelyCareService.save(tc));
-			}
-
+			return new ResponseEntity<String>( "svaed successfully. result.size() " + result.size() , HttpStatus.OK);			
+		} catch (IOException iox) {
+			return new ResponseEntity<String>( "no data stroed. wrongly formatted data. check errors."  , HttpStatus.OK); 
 		}
 
-		return new ResponseEntity<String>( "svaed successfully. result.size() " + result.size() , HttpStatus.OK);
 	}
 
 
-	protected <T> List<T> buildEntityObjects(ExtractConfig obj) {
+	protected <T> List<T> buildEntityObjects(ExtractConfig obj) throws IOException {
 		
 		
 		List<T> output = new ArrayList<T>( );
@@ -148,18 +152,31 @@ public class DemoController {
 					cntr.put("counter", cntr.get("counter") + 1  );
 					Object o1 = buildObjectFromRawData(obj.table_name, configmap, trxConfigmap, lineInArray);
 					if ( o1 instanceof String) {
-						erroroutput.add((String)o1);
+						String e1 = "Row - "+ cntr.get("counter") + " failed.";
+						e1 = e1 + (String)o1 ;
+						erroroutput.add(e1);
 					} else {
 						output.add((T)o1);
 					}					
 				}
 			}
-
 		} catch (IOException | CsvValidationException ex) {
-			logger.error("Error reading peoplename.txt " +ex.getMessage());
+			logger.error("Error reading  " +ex.getMessage());
 		}
+		
+		// if errors happen, then simply throw exception
+		if ( !obj.ignoreErrors ) {
+			if( !erroroutput.isEmpty() ) {
+				logger.error("error loading data. {}" , concatList(erroroutput) );
+				throw new IOException("error loading data. " + concatList(erroroutput).substring(0,100) );
+			}
+		}
+
+		
 		return output;
 	}
+
+
 
 	// build Entity object from raw data 
 	private Object buildObjectFromRawData(String entityName, Map<String, DbConfig> configmap, 
@@ -325,7 +342,6 @@ public class DemoController {
 		}		
 		try {
 			SimpleDateFormat dateformat = new SimpleDateFormat(pattern	);
-			logger.info(">>> '{}'", datestr);
 			return dateformat.parse(datestr);
         } catch (java.text.ParseException e) {
         	logger.error("date parsing error ", e);
@@ -390,6 +406,16 @@ public class DemoController {
 		}
 		return null;
 	}
+	
+	private String concatList(List<String> erroroutput) {
+
+		StringBuilder sb = new StringBuilder();
+		for(String s1 : erroroutput) {
+			sb.append(s1);
+		}
+		return sb.toString();
+	}
+
 
 
 

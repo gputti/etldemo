@@ -28,7 +28,7 @@ public class DbConfig {
 	public String name;
 	public String type;
 	public String format;
-	public String transformjson;
+	public String transformjson;	
 	
 	public DbConfig(String name, String type ) {
 		this(name, type, null);

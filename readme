@@ -1,7 +1,78 @@
-SERVER SCRIPTS
+Technologies used:
+java - openjdk version "14.0.2"
+Spring boot, JPA
+Postgresql 10.x
+Maven, 
+
+DB Setup:
+spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+
+
+Build, start and stop commands.
 sh bld.sh
 sh server.sh start
 sh server.sh stop 
+
+
+How to do unit test?
+sh bld.sh
+sh server.sh start
+mvn test
+sh server.sh stop
+
+API
+GET http://localhost:8080/rest/etl/api/status/ 
+POST http://localhost:8080/rest/etl/api/etl/ 
+
+
+Assumptions:
+data file contains no header. 
+object to be storeds is known during design time. (in real systems, these objects can be built runtime durg run time using technologies like Javassist. )
+config file contains column names, database data types and any formats (applicable to fields like Date) 
+transformations contain column names, data type and special syntax representing transformation in JSON format. 
+default date format expected is: "MM/dd/yyyy"
+assuming all transformations are additional fields. 
+
+
+How to run the system?
+sh bld.sh
+sh server.sh 
+
+Give following curl commands from command line:
+Extract and Load 'Hospital General Information'
+curl --location --request POST 'http://localhost:8010/rest/etl/api/etl' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+	"table_name" : "hospital",
+	"data_location" : "./Hospital_General_Information.csv",
+	"configfile_location" : "./hospital.config", 
+	"transformations" : "",
+	"ignoreErrors" : "True"
+}'
+
+
+Extract, transform and Load 'Timely Care Hospital data'
+curl --location --request POST 'http://localhost:8010/rest/etl/api/etl' \
+--header 'Content-Type: text/plain' \
+--data-raw '{
+	"table_name" : "timelycare",
+	"data_location" : "./Timely_and_Effective_Care-Hospital.csv",
+	"configfile_location" : "./timelycare.config", 
+	"transformations" : "./timelycare_trans.config", 
+	"ignoreErrors" : "False"
+}'
+
+
+
+
+
+
+
+
+
+
 
 
 

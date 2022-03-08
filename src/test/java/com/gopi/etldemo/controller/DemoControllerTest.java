@@ -62,19 +62,21 @@ class DemoControllerTest {
 
 
 	
-	public static void manualtesting1() {
+	public static void manualtesting1() throws Exception  {
 		
 		String json = "{\"table_name\" : \"hospital\",\"data_location\" : \"/Users/gopi/Downloads/Hospital_General_Information.csv\",\"configfile_location\" "
-				+ ": \"/Users/gopi/Downloads/hospital.config\", \"transformations\" : \"\" }";
+				+ ": \"/Users/gopi/Downloads/hospital.config\", \"transformations\" : \"\", \"ignoreErrors\" : \"False\" }";
 
 		DemoController controller = new DemoController( );
 		controller.readAndLoadData(json, null);
 	}
 	
 
-	public static void manualtesting2() {
+	public static void manualtesting2() throws Exception  {
 
-		String json = "{ \"table_name\" : \"timelycare\",	\"data_location\" : \"/Users/gopi/Downloads/Timely_and_Effective_Care-Hospital.csv\", \"configfile_location\" : \"/Users/gopi/Downloads/timelycare.config\", \"transformations\" : \"/Users/gopi/Downloads/timelycare_trans.config\" }";
+		String json = "{ \"table_name\" : \"timelycare\",	\"data_location\" : \"/Users/gopi/Downloads/Timely_and_Effective_Care-Hospital.csv\","
+				+ " \"configfile_location\" : \"/Users/gopi/Downloads/timelycare.config\", \"transformations\" "
+				+ ": \"/Users/gopi/Downloads/timelycare_trans.config\", \"ignoreErrors\" : \"True\" }";
 
 		DemoController controller = new DemoController( );
 		controller.readAndLoadData(json, null);

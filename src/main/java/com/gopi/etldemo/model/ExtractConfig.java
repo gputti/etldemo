@@ -29,6 +29,7 @@ public class ExtractConfig {
 	public String data_location;
 	public String configfile_location;
 	public String transformations;
+	public boolean ignoreErrors = false;
 	
 	public String getTable() {
 		return table_name;
