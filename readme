@@ -2,32 +2,45 @@ Technologies used:
 java - openjdk version "14.0.2"
 Spring boot, JPA
 Postgresql 10.x
-Maven, 
+Maven, git
 
-DB Setup:
+Initial Setup:
+---------------
+(make sure below information is as per your local postgresset up in ./etldemo/src/main/resources/application.properties)
 spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
 spring.datasource.username=postgres
 spring.datasource.password=postgres
 
+And, run below command from any db client:
+CREATE SCHEMA ANTHEM
 
-Build, start and stop commands.
+
+How to build, start and stop.
+-----------------------------
+git clone git@github.com:gputti/etldemo.git
+cd etldemo
+chmod +x *.sh
 sh bld.sh
 sh server.sh start
 sh server.sh stop 
 
 
 How to do unit test?
+---------------------
+cd etldemo
 sh bld.sh
 sh server.sh start
 mvn test
 sh server.sh stop
 
 API
+---
 GET http://localhost:8080/rest/etl/api/status/ 
 POST http://localhost:8080/rest/etl/api/etl/ 
 
 
 Assumptions:
+------------
 data file contains no header. 
 object to be storeds is known during design time. (in real systems, these objects can be built runtime durg run time using technologies like Javassist. )
 config file contains column names, database data types and any formats (applicable to fields like Date) 
@@ -37,11 +50,15 @@ assuming all transformations are additional fields.
 
 
 How to run the system?
+---------------------
+cd etldemo
 sh bld.sh
 sh server.sh 
 
 Give following curl commands from command line:
-Extract and Load 'Hospital General Information'
+-----------------------------------------------
+
+
 curl --location --request POST 'http://localhost:8010/rest/etl/api/etl' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -53,7 +70,8 @@ curl --location --request POST 'http://localhost:8010/rest/etl/api/etl' \
 }'
 
 
-Extract, transform and Load 'Timely Care Hospital data'
+
+
 curl --location --request POST 'http://localhost:8010/rest/etl/api/etl' \
 --header 'Content-Type: text/plain' \
 --data-raw '{
@@ -61,17 +79,8 @@ curl --location --request POST 'http://localhost:8010/rest/etl/api/etl' \
 	"data_location" : "./Timely_and_Effective_Care-Hospital.csv",
 	"configfile_location" : "./timelycare.config", 
 	"transformations" : "./timelycare_trans.config", 
-	"ignoreErrors" : "False"
+	"ignoreErrors" : "True"
 }'
-
-
-
-
-
-
-
-
-
 
 
 
