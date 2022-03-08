@@ -65,14 +65,7 @@ public class TimelyCare implements Serializable {
 	public String Footnote;
 	public Date Start_Date;
 	public Date End_Date;
+	public Integer actualNumber;
 
-	//_#ACTUALNUMBER_# | {"op" : "multi", "params" : [ "Score", "Sample"]}  
-	@Column(name = "ActualNumber")
-	public Integer getActualNumber() {
-		if ( Score == null || Sample == null ) {
-			return null;
-		}
-		return (int)(Score * Sample);
-	}
 
 }

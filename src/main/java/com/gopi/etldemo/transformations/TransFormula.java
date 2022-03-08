@@ -15,37 +15,24 @@
  * fitness for particular purposes and noninfringement of third party rights.
  * 
  **/
-package com.gopi.etldemo.model;
+package com.gopi.etldemo.transformations;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Gopikrishna Putti
- * Mar 6, 2022
+ * Mar 7, 2022
  *
  */
 
-public class ExtractConfig {
-	
-	public String table_name;
-	public String data_location;
-	public String configfile_location;
-	public String transformations;
-	
-	public String getTable() {
-		return table_name;
-	}
-	public String getDataloc() {
-		return data_location;		
-	}
-	public String getConfig() {
-		return configfile_location;
-	}
-	
-	public String getTransformations( ) {
-		return transformations;
-	}
-	
-	public String toString() {
-		return table_name + "; " + configfile_location + "; " + data_location + "; " + transformations;
-	}
+public interface TransFormula {
 
+	
+	public String getOperation();
+	
+	public List<String> getParams();
+	
+	public Object getValue(Map<String, Object> values);
+	
 }

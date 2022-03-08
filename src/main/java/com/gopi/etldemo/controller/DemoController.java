@@ -52,6 +52,7 @@ import com.gopi.etldemo.model.Hospital;
 import com.gopi.etldemo.model.TimelyCare;
 import com.gopi.etldemo.service.HospitalService;
 import com.gopi.etldemo.service.TimelyCareService;
+import com.gopi.etldemo.transformations.TransFormulaImple;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
@@ -96,12 +97,15 @@ public class DemoController {
 		return new ResponseEntity<String>( "ETL demo service running. Current time : " + currtime , HttpStatus.OK);
 	}       
 
-	@PostMapping("/extract")
+	@PostMapping("/etl")
 	@Transactional
-	public ResponseEntity<String> readData(@RequestBody String json, HttpServletResponse response) {
-		logger.info("read hospital data: {}", getTime() );
+	public ResponseEntity<String> readAndLoadData(@RequestBody String json, HttpServletResponse response) {
+
 		logger.info("json received: {}", json );
 		ExtractConfig obj = extractInputDetails(json);
+		if ( obj == null ) {
+			return new ResponseEntity<String>( "wrong input. " , HttpStatus.BAD_REQUEST);
+		}
 
 		List<Object> result = new ArrayList<Object>();
 		
@@ -131,7 +135,8 @@ public class DemoController {
 		List<T> output = new ArrayList<T>( );
 		List<String> erroroutput = new ArrayList<String>( );
 		// read config
-		Map<String, DbConfig> configmap = getDbConfigFromConfig(obj);
+		Map<String, DbConfig> configmap = getDbConfigFromConfig(obj, false);
+		Map<String, DbConfig> trxConfigmap = getDbConfigFromConfig(obj, true);
 		// read data
 		Map<String, Integer> cntr = new HashMap<String, Integer>();
 		cntr.put("counter", 0);
@@ -141,7 +146,7 @@ public class DemoController {
 			while ((lineInArray = reader.readNext()) != null) {
 				if ( lineInArray.length > 0 ) {
 					cntr.put("counter", cntr.get("counter") + 1  );
-					Object o1 = buildObjectFromRawData(obj.table_name, configmap,  lineInArray);
+					Object o1 = buildObjectFromRawData(obj.table_name, configmap, trxConfigmap, lineInArray);
 					if ( o1 instanceof String) {
 						erroroutput.add((String)o1);
 					} else {
@@ -157,7 +162,8 @@ public class DemoController {
 	}
 
 	// build Entity object from raw data 
-	private Object buildObjectFromRawData(String entityName, Map<String, DbConfig> configmap, String[] lineInArray) {
+	private Object buildObjectFromRawData(String entityName, Map<String, DbConfig> configmap, 
+			Map<String, DbConfig> trxConfigmap, String[] lineInArray) {
 		
 
 		int numOfRawDataCol = getColumnCountFromRawData(configmap);
@@ -166,8 +172,9 @@ public class DemoController {
 		
 		String dataline = null;
 		String [] parts = lineInArray;
+		int noofparts = parts.length;
 		String err = "";
-		if ( parts.length != colnames.length ) {
+		if ( noofparts != numOfRawDataCol ) {
 			err = "Data exception: no of values mismatch. expected: " +  colnames.length + ", actual: " + parts.length; 
 			err = err + "; Data: " + dataline;
 			return err;
@@ -182,7 +189,6 @@ public class DemoController {
 			String colname = colnames[ik];
 			String type = configmap.get(colname).type.trim().toUpperCase();
 			String format = configmap.get(colname).format == null ? null : configmap.get(colname).format.trim();
-
 
 			if( type.equals("SMALLINT") || type.equals("INTEGER") ) {
 				
@@ -233,8 +239,25 @@ public class DemoController {
 			}
 			if ( failed )
 				return err;
-
 		}
+		
+		
+		// now check for any transformations. 
+		if ( trxConfigmap != null && !trxConfigmap.isEmpty() ) {
+			for(String cname : trxConfigmap.keySet() ) {
+				String trx = trxConfigmap.get(cname).transformjson;
+				TransFormulaImple tfm =  getFormulaObject(trx);
+				if ( tfm == null ) {
+					err = err + "failed to do transformation. " + cname ;
+					failed = true;
+				} else {
+					Object v1 = tfm.getValue(valmap);
+					valmap.put(cname, v1 );
+				}
+			}
+		}
+		if ( failed ) 	return err;
+		
 		Class klazz = getClassObject(entityName);
 		Object o1 = mapper.convertValue(valmap, klazz);
 
@@ -243,11 +266,32 @@ public class DemoController {
 	}
 
 
-	private Map<String, DbConfig> getDbConfigFromConfig(ExtractConfig obj ){
+	private TransFormulaImple getFormulaObject(String trx) {
+
+		try {
+			return mapper.readValue(trx, TransFormulaImple.class);
+		}catch (Exception e) {
+			return null;
+		}
+
+	}
+
+
+	private Map<String, DbConfig> getDbConfigFromConfig(ExtractConfig obj, boolean trxConfig ){
 		
 		// user linkedhashmap so order of insertion is maintained.
-		Map<String, DbConfig> configmap = new LinkedHashMap<String, DbConfig>( );		
-		Path path2 = Paths.get(obj.getConfig());
+		Map<String, DbConfig> configmap = new LinkedHashMap<String, DbConfig>( );
+		String filepath = obj.getConfig();
+		if ( trxConfig ) {
+			filepath = obj.getTransformations();
+		}
+		
+		if ( filepath == null || filepath.isEmpty() ) {
+			// nothing to do. take u-turn 
+			return null;
+		}
+		Path path2 = Paths.get(filepath);
+		
 		try(  Stream<String> lines = Files.lines(path2)) {
 
 			lines.forEach(x ->  { 
@@ -290,13 +334,11 @@ public class DemoController {
 	}
 
 
-
-
 	private int getColumnCountFromRawData(Map<String, DbConfig> configmap) {
 		int colCountFromRawData = 0;
 		for(String key : configmap.keySet() ) {
 			DbConfig config = configmap.get(key);
-			if( !config.isTransformation ) {
+			if( config.transformjson == null ) {
 				colCountFromRawData++;
 			}
 		}
@@ -310,17 +352,20 @@ public class DemoController {
 		String parts[] = x.split("\\|");
 		logger.trace(">> x {}", x);
 		DbConfig config = null;
-		if ( parts.length > 2 ) {
-			config = new DbConfig(parts[0].trim(), parts[1].trim(), parts[2].trim() );
-		} else {
+		if ( parts.length == 2 ) {
 			config = new DbConfig(parts[0].trim(), parts[1].trim());
+		} else if ( parts.length == 3 ) {
+			config = new DbConfig(parts[0].trim(), parts[1].trim(), parts[2].trim() );
+		} else if ( parts.length == 4 ) {
+			config = new DbConfig(parts[0].trim(), parts[1].trim(), parts[2].trim(), parts[3].trim() );			
 		}
 		return config;
 	}
 
 
+	// parser input 
 	private ExtractConfig extractInputDetails(String json) {
-		// extract all values. 
+ 
 		ExtractConfig obj = null;
 		try {
 			obj = mapper.readValue(json, ExtractConfig.class);
